@@ -3,8 +3,7 @@ from discord.ext import commands
 import os
 from dotenv import load_dotenv
 import json
-with open('.env', 'rb') as f:
-    print(repr(f.read()))
+import random
 
 
 load_dotenv()
@@ -46,7 +45,7 @@ async def bal(ctx, member: discord.Member = None):
         save_balances(balances)
 
     current_bal = balances[user_id]
-    await ctx.send(f"{member.display_name} has ${current_bal}!")
+    await ctx.send(f"{member.display_name} has {current_bal} coins!")
 
 
 @bot.command()
@@ -64,6 +63,22 @@ async def daily(ctx, member: discord.Member = None):
     balances[user_id] += 10
     save_balances(balances)
     await ctx.send(f"Your daily reward of 10 coins has been claimed! Your new balance is {balances[user_id]} coins.")
+
+@bot.command()
+async def bet(ctx, bet_amount: int):
+    balances = load_balances()
+    user_id = str(ctx.author.id)
+    if random.random() <= 0.1:
+        balances[user_id] += bet_amount
+        await ctx.send(f"You won {bet_amount} coins! Your balance is now {balances[user_id]}.")
+    else:
+        balances[user_id] -= bet_amount
+        await ctx.send(f"You lost {bet_amount} :/. Your new balance is {balances[user_id]}.")
+
+    
+
+
+
 
 
 bot.run(token)
