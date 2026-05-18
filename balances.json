@@ -1,0 +1,16 @@
+{
+    "1482884531626315971": {
+        "balance": 150,
+        "last_daily": "2026-05-18T12:45:17.072902+00:00",
+        "name_sold": false,
+        "original_name": null,
+        "boost_ready": false
+    },
+    "1278035936210583647": {
+        "balance": 1145,
+        "last_daily": "2026-05-18T12:45:25.266114+00:00",
+        "name_sold": true,
+        "original_name": "mrmariix",
+        "boost_ready": true
+    }
+}
