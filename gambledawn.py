@@ -66,5 +66,4 @@ async def daily(ctx, member: discord.Member = None):
     await ctx.send(f"Your daily reward of 10 coins has been claimed! Your new balance is {balances[user_id]} coins.")
 
 
-print(f"TOKEN: {token}")
 bot.run(token)
