@@ -21,6 +21,7 @@ SOLD_NAME = "NO NAME, THIS DUMBAH SELLED IT"
 BOOST_COST = 50
 BASE_GAMBLE_WIN_CHANCE = 0.50
 BOOST_GAMBLE_BONUS = 0.20
+LEADERBOARD_LIMIT = 10
 
 # Small bot, but this keeps two commands from stepping on the same JSON save.
 balances_lock = asyncio.Lock()
@@ -134,6 +135,80 @@ def format_remaining_time(remaining):
     return " and ".join(parts)
 
 
+def build_help_message():
+    return (
+        "Hello dear, here is my command list:\n"
+        "`!help` - Show this help message.\n"
+        "`!bal [member]` - Check your coins, or someone else's coins.\n"
+        "`!lb` - Show the richest coin holders.\n"
+        "`!daily` - Claim 50 coins once every 10 hours.\n"
+        "`!gamble <amount>` or `!bet <amount>` - Bet some of your coins in a simple coin toss.\n"
+        "`!boost` - Spend 50 coins to raise your next gamble win chance by 20%.\n"
+        "`!sell` - Sell your name for 1000 coins and place it at auction for 10000 coins.\n"
+        "`!buy <member>` - Buy a sold name for 10000 coins and restore it.\n"
+        "`!daddy` - Reveal who daddy is.\n"
+        "`!mommy` - Reveal who mommy is."
+    )
+
+
+async def run_gamble(ctx, amount: int = None):
+    async with balances_lock:
+        balances = load_balances()
+        profile = get_profile(balances, str(ctx.author.id))
+
+        if profile["balance"] <= 0:
+            await ctx.send("You cannot gamble without any coins.")
+            return
+
+        if amount is None:
+            await ctx.send("Please tell me how many coins you want to gamble.")
+            return
+
+        if amount <= 0:
+            await ctx.send("Please choose a bet greater than 0.")
+            return
+
+        if amount > profile["balance"]:
+            await ctx.send("You cannot bet more coins than you have.")
+            return
+
+        win_chance = BASE_GAMBLE_WIN_CHANCE
+        used_boost = profile["boost_ready"]
+        if used_boost:
+            win_chance += BOOST_GAMBLE_BONUS
+            profile["boost_ready"] = False
+
+        if random.random() < win_chance:
+            profile["balance"] += amount
+            result_text = (
+                f"Fortune stayed beside you this time. You won {amount} coins and now have {profile['balance']} coins."
+            )
+        else:
+            profile["balance"] -= amount
+            result_text = (
+                f"The table turned cold this time. You lost {amount} coins and now have {profile['balance']} coins."
+            )
+
+        save_balances(balances)
+
+    if used_boost:
+        result_text += " Your boost was used for this gamble."
+
+    await ctx.send(result_text)
+
+
+async def resolve_member_name(ctx, user_id):
+    member = ctx.guild.get_member(int(user_id)) if ctx.guild else None
+    if member is not None:
+        return member.display_name
+
+    try:
+        user = await bot.fetch_user(int(user_id))
+        return user.display_name
+    except (discord.NotFound, discord.HTTPException, ValueError):
+        return f"Unknown User ({user_id})"
+
+
 def migrate_legacy_boosts():
     legacy_boosts = load_legacy_boosts()
     if not legacy_boosts:
@@ -189,19 +264,7 @@ async def on_command_error(ctx, error):
 
 @bot.command()
 async def help(ctx):
-    help_message = (
-        "Hello dear, here is my command list:\n"
-        "`!help` - Show this help message.\n"
-        "`!bal [member]` - Check your coins, or someone else's coins.\n"
-        "`!daily` - Claim 50 coins once every 10 hours.\n"
-        "`!gamble <amount>` - Bet some of your coins in a simple coin toss.\n"
-        "`!boost` - Spend 50 coins to raise your next gamble win chance by 20%.\n"
-        "`!sell` - Sell your name for 1000 coins and place it at auction for 10000 coins.\n"
-        "`!buy <member>` - Buy a sold name for 10000 coins and restore it.\n"
-        "`!daddy` - Reveal who daddy is.\n"
-        "`!mommy` - Reveal who mommy is."
-    )
-    await ctx.send(help_message)
+    await ctx.send(build_help_message())
 
 
 @bot.command()
@@ -216,6 +279,37 @@ async def bal(ctx, member: discord.Member = None):
     await ctx.send(
         f"{target.display_name} is currently holding {profile['balance']} coins."
     )
+
+
+@bot.command()
+async def lb(ctx):
+    async with balances_lock:
+        balances = load_balances()
+        if not balances:
+            await ctx.send("No one has a balance yet.")
+            return
+
+        leaderboard_entries = []
+        for user_id in balances:
+            profile = get_profile(balances, user_id)
+            leaderboard_entries.append((user_id, profile["balance"]))
+
+        sorted_balances = sorted(
+            leaderboard_entries,
+            key=lambda entry: entry[1],
+            reverse=True,
+        )
+        save_balances(balances)
+
+    leaderboard_lines = ["**Coin Leaderboard**", ""]
+    for index, (user_id, balance) in enumerate(
+        sorted_balances[:LEADERBOARD_LIMIT],
+        start=1,
+    ):
+        member_name = await resolve_member_name(ctx, user_id)
+        leaderboard_lines.append(f"**{index}.** {member_name} - {balance} coins")
+
+    await ctx.send("\n".join(leaderboard_lines))
 
 
 @bot.command()
@@ -253,52 +347,10 @@ async def daily(ctx):
     )
 
 
-@bot.command()
+@bot.command(aliases=["bet"])
 @commands.cooldown(1, 3, commands.BucketType.user)
 async def gamble(ctx, amount: int = None):
-    async with balances_lock:
-        balances = load_balances()
-        profile = get_profile(balances, str(ctx.author.id))
-
-        if profile["balance"] <= 0:
-            await ctx.send("You cannot gamble without any coins.")
-            return
-
-        if amount is None:
-            await ctx.send("Please tell me how many coins you want to gamble.")
-            return
-
-        if amount <= 0:
-            await ctx.send("Please choose a bet greater than 0.")
-            return
-
-        if amount > profile["balance"]:
-            await ctx.send("You cannot bet more coins than you have.")
-            return
-
-        win_chance = BASE_GAMBLE_WIN_CHANCE
-        used_boost = profile["boost_ready"]
-        if used_boost:
-            win_chance += BOOST_GAMBLE_BONUS
-            profile["boost_ready"] = False
-
-        if random.random() < win_chance:
-            profile["balance"] += amount
-            result_text = (
-                f"Fortune stayed beside you this time. You won {amount} coins and now have {profile['balance']} coins."
-            )
-        else:
-            profile["balance"] -= amount
-            result_text = (
-                f"The table turned cold this time. You lost {amount} coins and now have {profile['balance']} coins."
-            )
-
-        save_balances(balances)
-
-    if used_boost:
-        result_text += " Your boost was used for this gamble."
-
-    await ctx.send(result_text)
+    await run_gamble(ctx, amount)
 
 
 @bot.command()
@@ -383,26 +435,6 @@ async def sell(ctx):
         f"It is now listed at auction for {NAME_AUCTION_PRICE} coins, and your balance is {new_balance} coins."
     )
 
-@bot.command()
-async def lb(ctx):
-    balances = load_balances()
-    if not balances:
-        await ctx.send("No one has a balance yet.")
-        return
-
-    def get_balance(item):
-        val = item[1]
-        return val["balance"] if isinstance(val, dict) else val
-
-    sorted_balances = sorted(balances.items(), key=get_balance, reverse=True)
-
-    leaderboard_text = " **Coin Leaderboard**\n\n"
-    for i, (user_id, profile) in enumerate(sorted_balances[:10], start=1):
-        balance = profile["balance"] if isinstance(profile, dict) else profile
-        user = await bot.fetch_user(int(user_id))
-        leaderboard_text += f"**{i}.** {user.display_name} — {balance} coins\n"
-
-    await ctx.send(leaderboard_text)
 
 @bot.command()
 @commands.cooldown(1, 3, commands.BucketType.user)
