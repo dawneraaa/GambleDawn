@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 
 
 BALANCES_FILE = "balances.json"
+LEGACY_BOOSTS_FILE = "boosts.json"
 DEFAULT_BALANCE = 100
 DAILY_REWARD = 50
 DAILY_COOLDOWN = timedelta(hours=10)
@@ -61,6 +62,17 @@ def save_balances(data):
         temp_path = temp_file.name
 
     os.replace(temp_path, file_path)
+
+
+def load_legacy_boosts():
+    if not os.path.exists(LEGACY_BOOSTS_FILE):
+        return {}
+
+    with open(LEGACY_BOOSTS_FILE, "r", encoding="utf-8") as file:
+        content = file.read().strip()
+        if not content:
+            return {}
+        return json.loads(content)
 
 
 def get_profile(balances, user_id):
@@ -122,8 +134,33 @@ def format_remaining_time(remaining):
     return " and ".join(parts)
 
 
+def migrate_legacy_boosts():
+    legacy_boosts = load_legacy_boosts()
+    if not legacy_boosts:
+        return
+
+    balances = load_balances()
+    migrated_any = False
+
+    # Old boosts lived in their own file. Fold them into balances once, then retire that file.
+    for user_id, has_boost in legacy_boosts.items():
+        if not has_boost:
+            continue
+
+        profile = get_profile(balances, str(user_id))
+        if not profile["boost_ready"]:
+            profile["boost_ready"] = True
+            migrated_any = True
+
+    if migrated_any:
+        save_balances(balances)
+
+    os.remove(LEGACY_BOOSTS_FILE)
+
+
 @bot.event
 async def on_ready():
+    migrate_legacy_boosts()
     print(f"Logged in as {bot.user} and ready to keep the coin book tidy.")
 
 
