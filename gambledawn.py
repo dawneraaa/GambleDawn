@@ -16,7 +16,7 @@ def load_balances():
     if not os.path.exists('balances.json'):
         return {}
     with open('balances.json', 'r') as f:
-        return json.load('f') 
+        return json.load(f) 
 
 
 def save_balances(dict_balances):
@@ -38,6 +38,28 @@ async def bal(ctx, member: discord.Member = None):
 
     current_bal = balances[user_id]
     await ctx.send(f"{member.display_name} has ${current_bal}!")
+
+
+@bot.command()
+async def daily(ctx, member: discord.Member = None):
+    if member is None:
+        member = ctx.author
+
+    balances = load_balances()
+    user_id = str(member.id)
+
+    if user_id not in balances:
+        balances[user_id] = 100
+        save_balances(balances)
+
+    balances[user_id] += 10
+    save_balances(balances)
+    await ctx.send(f"Your daily reward of 10 coins has been claimed! Your new balance is {balances[user_id]} coins.")
+
+
+@bot.command
+async def bet10(ctx, bet_amount: int, member: discord.Member = None):
+    
 
 
 
