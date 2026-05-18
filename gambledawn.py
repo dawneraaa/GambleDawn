@@ -137,17 +137,17 @@ def format_remaining_time(remaining):
 
 def build_help_message():
     return (
-        "Hello dear, here is my command list:\n"
-        "`!help` - Show this help message.\n"
-        "`!bal [member]` - Check your coins, or someone else's coins.\n"
-        "`!lb` - Show the richest coin holders.\n"
-        "`!daily` - Claim 50 coins once every 10 hours.\n"
-        "`!gamble <amount>` or `!bet <amount>` - Bet some of your coins in a simple coin toss.\n"
-        "`!boost` - Spend 50 coins to raise your next gamble win chance by 20%.\n"
-        "`!sell` - Sell your name for 1000 coins and place it at auction for 10000 coins.\n"
-        "`!buy <member>` - Buy a sold name for 10000 coins and restore it.\n"
-        "`!daddy` - Reveal who daddy is.\n"
-        "`!mommy` - Reveal who mommy is."
+        "ugh fine, heres the command list, not cuz i wanna help u or anythin:\n"
+        "`!help` - shows this thing again i guess.\n"
+        "`!bal [member]` - checks ur coins, or someone elses coins.\n"
+        "`!lb` - shows whos stupid rich rn.\n"
+        "`!daily` - grab 50 coins every 10 hours.\n"
+        "`!gamble <amount>` or `!bet <amount>` - bet ur coins if u wanna risk lookin dumb.\n"
+        "`!boost` - spends 50 coins to give ur next gamble 20% more win chance.\n"
+        "`!sell` - sells ur name for 1000 coins and throws it on auction for 10000.\n"
+        "`!buy <member>` - buys a sold name for 10000 coins and gives it back.\n"
+        "`!daddy` - says who daddy is.\n"
+        "`!mommy` - says who mommy is."
     )
 
 
@@ -157,19 +157,19 @@ async def run_gamble(ctx, amount: int = None):
         profile = get_profile(balances, str(ctx.author.id))
 
         if profile["balance"] <= 0:
-            await ctx.send("You cannot gamble without any coins.")
+            await ctx.send("you cant gamble with no coins, genius.")
             return
 
         if amount is None:
-            await ctx.send("Please tell me how many coins you want to gamble.")
+            await ctx.send("just say how much ur betting already.")
             return
 
         if amount <= 0:
-            await ctx.send("Please choose a bet greater than 0.")
+            await ctx.send("pick a number over 0 maybe.")
             return
 
         if amount > profile["balance"]:
-            await ctx.send("You cannot bet more coins than you have.")
+            await ctx.send("you cant bet more then what u got.")
             return
 
         win_chance = BASE_GAMBLE_WIN_CHANCE
@@ -181,18 +181,18 @@ async def run_gamble(ctx, amount: int = None):
         if random.random() < win_chance:
             profile["balance"] += amount
             result_text = (
-                f"Fortune stayed beside you this time. You won {amount} coins and now have {profile['balance']} coins."
+                f"tch, u got lucky this time. u won {amount} coins and now u got {profile['balance']}."
             )
         else:
             profile["balance"] -= amount
             result_text = (
-                f"The table turned cold this time. You lost {amount} coins and now have {profile['balance']} coins."
+                f"see? the table clowned u. u lost {amount} coins and now u got {profile['balance']}."
             )
 
         save_balances(balances)
 
     if used_boost:
-        result_text += " Your boost was used for this gamble."
+        result_text += " yeah, ur boost got used too."
 
     await ctx.send(result_text)
 
@@ -236,7 +236,7 @@ def migrate_legacy_boosts():
 @bot.event
 async def on_ready():
     migrate_legacy_boosts()
-    print(f"Logged in as {bot.user} and ready to keep the coin book tidy.")
+    print(f"Logged in as {bot.user}. not like i was waitin to be useful or anythin.")
 
 
 @bot.event
@@ -246,20 +246,20 @@ async def on_command_error(ctx, error):
 
     if isinstance(error, commands.CommandOnCooldown):
         await ctx.send(
-            f"Please slow down a little and try again in {error.retry_after:.1f} seconds."
+            f"slow down already. try again in {error.retry_after:.1f} seconds."
         )
         return
 
     if isinstance(error, commands.MissingRequiredArgument):
-        await ctx.send("You are missing an argument. Please use !help to see the command.")
+        await ctx.send("u forgot part of the command. go read !help or whatever.")
         return
 
     if isinstance(error, commands.BadArgument):
-        await ctx.send("That argument did not look right. Please check it and try again.")
+        await ctx.send("that argument looks wrong. type it better.")
         return
 
     print(f"Error in command {ctx.command}: {error}")
-    await ctx.send("Something went wrong on my side. Please try again in a moment.")
+    await ctx.send("something broke on my side, ok. try again in a sec.")
 
 
 @bot.command()
@@ -277,7 +277,7 @@ async def bal(ctx, member: discord.Member = None):
         save_balances(balances)
 
     await ctx.send(
-        f"{target.display_name} is currently holding {profile['balance']} coins."
+        f"{target.display_name} got {profile['balance']} coins rn. dont waste em or whatever."
     )
 
 
@@ -286,7 +286,7 @@ async def lb(ctx):
     async with balances_lock:
         balances = load_balances()
         if not balances:
-            await ctx.send("No one has a balance yet.")
+            await ctx.send("nobody even got coins yet. kinda sad.")
             return
 
         leaderboard_entries = []
@@ -301,7 +301,7 @@ async def lb(ctx):
         )
         save_balances(balances)
 
-    leaderboard_lines = ["**Coin Leaderboard**", ""]
+    leaderboard_lines = ["**Coin Leaderboard**", "dont get all smug if ur first.", ""]
     for index, (user_id, balance) in enumerate(
         sorted_balances[:LEADERBOARD_LIMIT],
         start=1,
@@ -327,12 +327,12 @@ async def daily(ctx):
                 remaining = format_remaining_time(next_claim - now)
                 try:
                     await ctx.author.send(
-                        "Your daily reward is still resting. "
-                        f"Please wait {remaining}. The limit is once every 10 hours."
+                        "ur daily aint ready yet. "
+                        f"just wait {remaining}. its 10 hours, not that hard."
                     )
                 except discord.Forbidden:
                     await ctx.send(
-                        "I could not send you a private reminder, but your daily reward is still on its 10 hour limit."
+                        "i cant dm u, but ur daily still got the 10 hour limit on it."
                     )
                 return
 
@@ -342,8 +342,7 @@ async def daily(ctx):
         new_balance = profile["balance"]
 
     await ctx.send(
-        "Your daily reward has been tucked safely into your hands. "
-        f"You received {DAILY_REWARD} coins and now have {new_balance} coins."
+        f"fine, take ur {DAILY_REWARD} daily coins already. u got {new_balance} now, happy?"
     )
 
 
@@ -371,11 +370,11 @@ async def boost(ctx):
         profile = get_profile(balances, str(ctx.author.id))
 
         if profile["boost_ready"]:
-            await ctx.send("You already have a boost waiting for your next gamble.")
+            await ctx.send("you already got a boost waitin, dont be greedy.")
             return
 
         if profile["balance"] < BOOST_COST:
-            await ctx.send(f"You need {BOOST_COST} coins to buy a boost.")
+            await ctx.send(f"you need {BOOST_COST} coins first, obviously.")
             return
 
         profile["balance"] -= BOOST_COST
@@ -384,8 +383,8 @@ async def boost(ctx):
         new_balance = profile["balance"]
 
     await ctx.send(
-        f"Your boost is ready. It cost {BOOST_COST} coins, and your next gamble now has 20% more win chance. "
-        f"You now have {new_balance} coins."
+        f"fine, ur boost is ready now. it cost {BOOST_COST} coins, and ur next gamble got 20% more win chance. "
+        f"u got {new_balance} left."
     )
 
 
@@ -393,7 +392,7 @@ async def boost(ctx):
 @commands.cooldown(1, 3, commands.BucketType.user)
 async def sell(ctx):
     if ctx.guild is None:
-        await ctx.send("This command can only be used inside a server.")
+        await ctx.send("do that in a server, not here.")
         return
 
     async with balances_lock:
@@ -402,7 +401,7 @@ async def sell(ctx):
 
         if profile["name_sold"]:
             await ctx.send(
-                f"Your name has already been sold. It is still sitting at auction for {NAME_AUCTION_PRICE} coins."
+                f"ur name already got sold, so stop trying. its still on auction for {NAME_AUCTION_PRICE} coins."
             )
             return
 
@@ -415,12 +414,12 @@ async def sell(ctx):
             )
         except discord.Forbidden:
             await ctx.send(
-                "I could not take your name away because I do not have permission to change your nickname."
+                "i cant steal ur name cuz the perms are being annoying."
             )
             return
         except discord.HTTPException:
             await ctx.send(
-                "Something interrupted the name sale. Please try again in a moment."
+                "the name sale bugged out. try again later or whatever."
             )
             return
 
@@ -431,8 +430,8 @@ async def sell(ctx):
         new_balance = profile["balance"]
 
     await ctx.send(
-        f"Your name has been sold for {SELL_REWARD} coins. "
-        f"It is now listed at auction for {NAME_AUCTION_PRICE} coins, and your balance is {new_balance} coins."
+        f"fine, ur name got sold for {SELL_REWARD} coins. "
+        f"its on auction for {NAME_AUCTION_PRICE} now, and u got {new_balance} coins."
     )
 
 
@@ -440,11 +439,11 @@ async def sell(ctx):
 @commands.cooldown(1, 3, commands.BucketType.user)
 async def buy(ctx, member: discord.Member):
     if ctx.guild is None:
-        await ctx.send("This command can only be used inside a server.")
+        await ctx.send("do that in a server, not here.")
         return
 
     if member.id == ctx.author.id:
-        await ctx.send("You cannot buy your own name.")
+        await ctx.send("you cant buy ur own name, thats dumb.")
         return
 
     async with balances_lock:
@@ -453,16 +452,16 @@ async def buy(ctx, member: discord.Member):
         seller_profile = get_profile(balances, str(member.id))
 
         if not seller_profile["name_sold"]:
-            await ctx.send("That person's name is not up for auction.")
+            await ctx.send("that persons name aint even on auction.")
             return
 
         if not seller_profile["original_name"]:
-            await ctx.send("I could not find the original name for that sale.")
+            await ctx.send("i cant find the old name, so no.")
             return
 
         if buyer_profile["balance"] < NAME_AUCTION_PRICE:
             await ctx.send(
-                f"You need {NAME_AUCTION_PRICE} coins to buy that name."
+                f"you need {NAME_AUCTION_PRICE} coins for that, obviously."
             )
             return
 
@@ -476,12 +475,12 @@ async def buy(ctx, member: discord.Member):
             )
         except discord.Forbidden:
             await ctx.send(
-                "I could not restore that nickname because I do not have permission."
+                "i cant restore that nickname cuz perms are being annoying again."
             )
             return
         except discord.HTTPException:
             await ctx.send(
-                "Something interrupted the auction purchase. Please try again in a moment."
+                "the auction thing bugged out. try again later."
             )
             return
 
@@ -493,8 +492,8 @@ async def buy(ctx, member: discord.Member):
         buyer_balance = buyer_profile["balance"]
 
     await ctx.send(
-        f"You bought {member.display_name}'s name for {NAME_AUCTION_PRICE} coins. "
-        f"The original name has been restored, and you now have {buyer_balance} coins."
+        f"fine, you bought {member.display_name}'s name for {NAME_AUCTION_PRICE} coins. "
+        f"the old name is back now, and u got {buyer_balance} coins left."
     )
 
 
