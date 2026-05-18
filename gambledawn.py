@@ -3,9 +3,14 @@ from discord.ext import commands
 import os
 from dotenv import load_dotenv
 import json
+with open('.env', 'rb') as f:
+    print(repr(f.read()))
+
 
 load_dotenv()
-token = os.getenv('discord_token')
+
+token = os.getenv("bot_discord_token")
+
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -16,7 +21,11 @@ def load_balances():
     if not os.path.exists('balances.json'):
         return {}
     with open('balances.json', 'r') as f:
-        return json.load(f) 
+        content = f.read().strip()
+        if not content:
+            return {}
+        return json.loads(content)
+
 
 
 def save_balances(dict_balances):
@@ -57,11 +66,5 @@ async def daily(ctx, member: discord.Member = None):
     await ctx.send(f"Your daily reward of 10 coins has been claimed! Your new balance is {balances[user_id]} coins.")
 
 
-@bot.command
-async def bet10(ctx, bet_amount: int, member: discord.Member = None):
-    
-
-
-
-
+print(f"TOKEN: {token}")
 bot.run(token)
