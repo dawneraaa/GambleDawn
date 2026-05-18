@@ -458,6 +458,20 @@ async def buy(ctx, member: discord.Member):
         f"The original name has been restored, and you now have {buyer_balance} coins."
     )
 
+@bot.command()
+async def lb(ctx):
+    balances = load_balances()
+    if not balances:
+        await ctx.send("No one has a balance yet")
+        return
+    sorted_balances = sorted(balances.items(), key=lambda x: x[1], reverse=True)
+    leaderboard_text = "**Coin Leaderboard**\n\n"
+    for i, (user_id, balance) in enumerate(sorted_balances[:10], start=1):
+        user = await bot.fetch_user(int(user_id))
+        leaderboard_text += f"**{i}.** {user.display_name} — {balance} coins\n"
+
+    await ctx.send(leaderboard_text)
+
 
 if __name__ == "__main__":
     if not token:
