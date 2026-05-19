@@ -87,6 +87,19 @@ SHIP_ENDINGS = [
     "dont look at me like that, im just readin the filth in the air",
 ]
 
+SHIP_GIF_URLS = [
+    "https://media.tenor.com/SIlHojO65S4AAAPo/anime-anime-kiss.gif",
+    "https://media.tenor.com/Y3exMFA1Y0AAAAAC/anime-kiss-anime-girl-kiss-boy-gif.gif",
+    "https://media.tenor.com/DsVvGuQQs4MAAAPo/kiss-anime-couple.gif",
+    "https://media.tenor.com/7fLJa6J9AoQAAAPo/miyamura-hori-kiss-anime.gif",
+    "https://media.tenor.com/DWa6aF6lSpwAAAPo/kiss-anime.gif",
+    "https://media.tenor.com/nD96iVIBxMkAAAPo/shirayuki-zen-kiss-anime.gif",
+    "https://media.tenor.com/j1L1Yc_AvJAAAAAC/megumi-kato-kiss.gif",
+    "https://media.tenor.com/dvslHj-zmNIAAAPo/kiss-anime.gif",
+    "https://media.tenor.com/8kJtVkVFeCIAAAPo/anime-anime-kiss.gif",
+    "https://media.tenor.com/iWcKV0l5KfAAAAAC/ichigo-hiro.gif",
+]
+
 SHIP_SECRET_CODE = "heatwave"
 
 SHOP_ITEMS = {
@@ -597,7 +610,7 @@ init_database()
 migrate_legacy_json_if_needed()
 
 
-async def send_embed_message(ctx, title, description, color=EMBED_COLOR, fields=None):
+async def send_embed_message(ctx, title, description, color=EMBED_COLOR, fields=None, image_url=None):
     embed = make_embed(title, description, color=color)
     for field in fields or []:
         add_field(
@@ -606,6 +619,8 @@ async def send_embed_message(ctx, title, description, color=EMBED_COLOR, fields=
             field["value"],
             inline=field.get("inline", False),
         )
+    if image_url:
+        embed.set_image(url=image_url)
     await ctx.send(embed=embed)
 
 
@@ -1708,6 +1723,7 @@ async def ship(ctx, cheat_code: str = None):
     first, second = random.sample(candidates, 2)
     forced_ship = (cheat_code or "").strip().lower() == SHIP_SECRET_CODE
     chemistry = 100 if forced_ship else random.randint(35, 100)
+    ship_gif_url = random.choice(SHIP_GIF_URLS)
     ship_text = " ".join(
         [
             random.choice(SHIP_OPENERS),
@@ -1736,6 +1752,7 @@ async def ship(ctx, cheat_code: str = None):
         ship_text,
         color=SUCCESS_COLOR if chemistry >= 70 else EMBED_COLOR,
         fields=fields,
+        image_url=ship_gif_url,
     )
 
 
