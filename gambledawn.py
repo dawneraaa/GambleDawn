@@ -11,9 +11,7 @@ from logging.handlers import RotatingFileHandler
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
-from keep_alive import keep_alive
 
-keep_alive()
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ENV_FILE = os.path.join(BASE_DIR, ".env")
@@ -88,16 +86,10 @@ SHIP_ENDINGS = [
 ]
 
 SHIP_GIF_URLS = [
-    "https://media.tenor.com/SIlHojO65S4AAAPo/anime-anime-kiss.gif",
-    "https://media.tenor.com/Y3exMFA1Y0AAAAAC/anime-kiss-anime-girl-kiss-boy-gif.gif",
-    "https://media.tenor.com/DsVvGuQQs4MAAAPo/kiss-anime-couple.gif",
-    "https://media.tenor.com/7fLJa6J9AoQAAAPo/miyamura-hori-kiss-anime.gif",
-    "https://media.tenor.com/DWa6aF6lSpwAAAPo/kiss-anime.gif",
-    "https://media.tenor.com/nD96iVIBxMkAAAPo/shirayuki-zen-kiss-anime.gif",
-    "https://media.tenor.com/j1L1Yc_AvJAAAAAC/megumi-kato-kiss.gif",
-    "https://media.tenor.com/dvslHj-zmNIAAAPo/kiss-anime.gif",
-    "https://media.tenor.com/8kJtVkVFeCIAAAPo/anime-anime-kiss.gif",
-    "https://media.tenor.com/iWcKV0l5KfAAAAAC/ichigo-hiro.gif",
+    "https://media.tenor.com/JmphmnN1y3kAAAAM/kiss.gif",
+    "https://media.tenor.com/YhGc7aQAI4oAAAAM/megumi-kato-kiss.gif",
+    "https://media.tenor.com/cQzRWAWrN6kAAAAM/ichigo-hiro.gif",
+    "https://media.tenor.com/SJhcVWsxgEkAAAAM/anime-kiss-anime.gif",
 ]
 
 SHIP_SECRET_CODE = "heatwave"
